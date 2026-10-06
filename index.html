@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星空下的邀請 ♥ Karen</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family:"PingFang TC","Microsoft JhengHei","Noto Sans TC",sans-serif;
+    background:radial-gradient(1200px 800px at 50% -10%, #3b2d5e 0%, #241b3f 45%, #150f2b 100%);
+    min-height:100vh; overflow-x:hidden; color:#f3ecff;
+  }
+  .screen { display:none; min-height:100vh; flex-direction:column; align-items:center; justify-content:center; padding:26px; position:relative; z-index:2; }
+  .screen.active { display:flex; animation:rise .7s cubic-bezier(.2,.9,.3,1.2); }
+  @keyframes rise { from{opacity:0; transform:translateY(40px) scale(.97);} to{opacity:1; transform:none;} }
+
+  h1 { font-size:clamp(1.6rem,5.5vw,2.9rem); text-align:center; line-height:1.5; margin-bottom:14px; font-weight:800; text-shadow:0 0 24px rgba(255,120,180,.45); }
+  .sub { color:#c9b8ff; margin-bottom:46px; font-size:.95rem; letter-spacing:1px; text-align:center; }
+  .glow-heart { color:#ff7eb6; text-shadow:0 0 18px #ff5ea0; display:inline-block; animation:beat 1.1s infinite; }
+  @keyframes beat { 0%,100%{transform:scale(1);} 50%{transform:scale(1.3);} }
+
+  .btn-row { display:flex; align-items:center; width:min(880px,94vw); justify-content:space-between; gap:20px; }
+  #btnYes {
+    background:linear-gradient(135deg,#ff5ea0,#ff2e7e); color:#fff; border:none;
+    font-size:1.35rem; font-weight:800; padding:18px 50px; border-radius:60px; cursor:pointer;
+    box-shadow:0 0 30px rgba(255,46,126,.55), 0 0 80px rgba(255,46,126,.25), inset 0 0 12px rgba(255,255,255,.25);
+    transition:transform .25s cubic-bezier(.3,1.4,.5,1); z-index:5; position:relative; font-family:inherit;
+  }
+  #btnYes:hover { filter:brightness(1.12); }
+  #btnNo {
+    background:rgba(255,255,255,.06); color:#b8a8e8; border:2px solid rgba(184,168,232,.5);
+    font-size:1.1rem; padding:15px 42px; border-radius:60px; cursor:pointer; backdrop-filter:blur(4px);
+    transition:left .2s cubic-bezier(.2,.9,.3,1.3), top .2s cubic-bezier(.2,.9,.3,1.3), opacity .4s, transform .4s;
+    z-index:6; position:fixed; font-family:inherit;
+  }
+  #taunt { margin-top:34px; min-height:1.6em; color:#ffb3d4; font-size:1.05rem; font-style:italic; text-shadow:0 0 12px rgba(255,120,180,.5); transition:opacity .3s; }
+
+  .step-tag { color:#8f7bd8; font-weight:800; letter-spacing:4px; margin-bottom:12px; font-size:.85rem; }
+  input[type=date] {
+    font-size:1.25rem; padding:15px 20px; border:2px solid rgba(184,168,232,.5); border-radius:16px;
+    background:rgba(255,255,255,.07); color:#fff; outline:none; margin-bottom:30px; font-family:inherit;
+    color-scheme:dark;
+  }
+  input[type=date]:focus { border-color:#ff5ea0; box-shadow:0 0 0 5px rgba(255,94,160,.18); }
+  .btn-next {
+    background:linear-gradient(135deg,#ff5ea0,#ff2e7e); color:#fff; border:none;
+    font-size:1.25rem; font-weight:800; padding:16px 52px; border-radius:60px; cursor:pointer;
+    box-shadow:0 0 26px rgba(255,46,126,.5); transition:transform .2s, opacity .2s; font-family:inherit;
+  }
+  .btn-next:disabled { opacity:.3; cursor:not-allowed; transform:none !important; }
+  .btn-next:not(:disabled):hover { transform:scale(1.07); }
+  .chip { margin-top:26px; color:#d8ccff; font-size:.95rem; background:rgba(255,255,255,.07); border:1px solid rgba(184,168,232,.3); padding:11px 24px; border-radius:40px; }
+
+  .food-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:16px; width:min(660px,94vw); }
+  .food-card {
+    background:rgba(255,255,255,.06); border:2px solid rgba(184,168,232,.35); border-radius:22px; padding:26px 12px;
+    text-align:center; cursor:pointer; font-size:1.15rem; font-weight:700; color:#f3ecff;
+    transition:transform .2s, border-color .2s, box-shadow .2s, background .2s; user-select:none; font-family:inherit;
+  }
+  .food-card .emoji { font-size:2.5rem; display:block; margin-bottom:10px; filter:drop-shadow(0 0 10px rgba(255,126,182,.6)); }
+  .food-card:hover { transform:translateY(-6px); border-color:#ff7eb6; background:rgba(255,94,160,.1); box-shadow:0 10px 30px rgba(255,46,126,.2); }
+  .food-card.selected { border-color:#ff2e7e; background:rgba(255,46,126,.18); transform:scale(1.06); box-shadow:0 0 30px rgba(255,46,126,.35); }
+
+  .letter-wrap { width:min(660px,95vw); }
+  .letter {
+    background:linear-gradient(180deg,#fdf6ff,#f7ecff); color:#4a3560; border-radius:10px;
+    padding:clamp(30px,6vw,56px); box-shadow:0 0 60px rgba(180,120,255,.25), 0 24px 60px rgba(0,0,0,.4);
+    position:relative; line-height:2; font-size:1.08rem;
+  }
+  .letter::before { content:""; position:absolute; top:-13px; left:50%; transform:translateX(-50%) rotate(-2deg);
+    width:130px; height:30px; background:rgba(255,94,160,.45); border-radius:3px; }
+  .letter h2 { color:#d63384; margin-bottom:18px; font-size:1.5rem; }
+  .letter p { margin-bottom:16px; }
+  .letter .sign { text-align:right; color:#d63384; font-weight:800; }
+  .recap { background:linear-gradient(135deg,#ffe0ef,#f3e2ff); border-radius:14px; padding:14px 22px; margin:0 0 22px; color:#a03070; font-weight:800; }
+  .btn-again { margin:36px auto 10px; display:block; }
+  .reset-link { margin-top:44px; color:#8f7bd8; font-size:.8rem; cursor:pointer; text-decoration:underline; background:none; border:none; font-family:inherit; }
+
+  .star { position:fixed; border-radius:50%; background:#fff; pointer-events:none; z-index:0;
+    animation:twinkle ease-in-out infinite; }
+  @keyframes twinkle { 0%,100%{opacity:.15;} 50%{opacity:.9;} }
+  .shooting { position:fixed; width:2px; height:2px; background:#fff; border-radius:50%; pointer-events:none; z-index:0;
+    box-shadow:0 0 8px 2px rgba(255,255,255,.6); animation:shoot 1.4s ease-out forwards; }
+  @keyframes shoot { from{ transform:translate(0,0); opacity:1;} to{ transform:translate(-320px,200px); opacity:0;} }
+  .confetti-heart { position:fixed; pointer-events:none; z-index:60; animation:confetti 2.6s ease-in forwards; text-shadow:0 0 12px currentColor; }
+  @keyframes confetti { to { transform:translateY(108vh) rotate(720deg); opacity:0; } }
+</style>
+</head>
+<body>
+
+<section class="screen" id="screen1">
+  <h1>Karen，要不要跟我去約會？<span class="glow-heart">♥</span></h1>
+  <p class="sub">在星空下問這句話，特別認真。</p>
+  <div class="btn-row">
+    <button id="btnYes">好哦 ♥</button>
+    <button id="btnNo">否</button>
+  </div>
+  <p id="taunt"></p>
+</section>
+
+<section class="screen" id="screen2">
+  <p class="step-tag">STEP 2 · 星空日曆</p>
+  <h1>Karen，邊一日得閒？</h1>
+  <input type="date" id="dateInput">
+  <br>
+  <button class="btn-next" id="btnDateConfirm" disabled>就這天！</button>
+  <p class="chip" id="sofar2"></p>
+</section>
+
+<section class="screen" id="screen3">
+  <p class="step-tag">STEP 3 · 吃貨星圖</p>
+  <h1>約會那天，想吃什麼？</h1>
+  <div class="food-grid">
+    <button class="food-card" data-food="火鍋"><span class="emoji">🍲</span>火鍋</button>
+    <button class="food-card" data-food="肉肉"><span class="emoji">🥩</span>肉肉</button>
+    <button class="food-card" data-food="泰國野"><span class="emoji">🌶️</span>泰國野</button>
+    <button class="food-card" data-food="韓國嘢"><span class="emoji">🍗</span>韓國嘢</button>
+    <button class="food-card" data-food="米線"><span class="emoji">🍜</span>米線</button>
+    <button class="food-card" data-food="拉麵"><span class="emoji">🍥</span>拉麵</button>
+  </div>
+  <p class="chip" id="sofar3"></p>
+</section>
+
+<section class="screen" id="screen4">
+  <p class="step-tag">STEP 4 · 星空情書</p>
+  <div class="letter-wrap">
+    <div class="letter" id="letter">
+      <h2>給 Karen 的一封情書</h2>
+      <p>親愛的 Karen：</p>
+      <p>聽說對著流星許願很靈，所以我把願望寫下來了——<br>「希望下一次看星星的時候，身邊是妳。」</p>
+      <p>這次約會我認真準備好了：座位我訂、路線我查、好吃的我排隊。妳只需要負責漂亮出席，順便負責把我的心偷走就好。</p>
+      <p>如果吃完還捨不得回家，我們就慢慢走、慢慢聊，把一條很短的路走成很長的回憶。</p>
+      <p>星星都答應了，妳不許反悔哦。</p>
+      <p class="sign">—— 想把整片星空送給妳的人 ♥</p>
+    </div>
+  </div>
+  <button class="btn-next btn-again" id="btnAgain">再看一次</button>
+  <button class="reset-link" id="btnReset">重置所有選擇</button>
+</section>
+
+<script>
+(function(){
+  var STORE_KEY = 'karenDateApp_v2';
+  var state = { step:1, fleeCount:0, date:'', food:'' };
+  try { var s = JSON.parse(localStorage.getItem(STORE_KEY)); if(s) state = Object.assign(state, s); } catch(e){}
+  function save(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){} }
+  function $(id){ return document.getElementById(id); }
+
+  for(var i=0;i<90;i++){
+    var st=document.createElement('div'); st.className='star';
+    var sz=(1+Math.random()*2.4);
+    st.style.width=sz+'px'; st.style.height=sz+'px';
+    st.style.left=Math.random()*100+'vw'; st.style.top=Math.random()*100+'vh';
+    st.style.animationDuration=(1.5+Math.random()*3)+'s';
+    st.style.animationDelay=(-Math.random()*3)+'s';
+    document.body.appendChild(st);
+  }
+  setInterval(function(){
+    if(document.hidden) return;
+    var m=document.createElement('div'); m.className='shooting';
+    m.style.left=(30+Math.random()*65)+'vw'; m.style.top=(Math.random()*35)+'vh';
+    document.body.appendChild(m);
+    setTimeout(function(){ m.remove(); },1500);
+  }, 2600);
+
+  function showStep(n){
+    state.step=n; save();
+    document.querySelectorAll('.screen').forEach(function(el){ el.classList.remove('active'); });
+    $('screen'+n).classList.add('active');
+    window.scrollTo(0,0);
+    if(n===2) updateSoFar(2);
+    if(n===3) updateSoFar(3);
+    if(n===4) buildRecap();
+  }
+
+  var taunts = ['抓不到我～','不要啦，再想想？','我閃！','嘿嘿，差一點點','欸欸欸別過來','我跳！','這個按鈕不想被按','快跑快跑 💨'];
+  var btnYes=$('btnYes'), btnNo=$('btnNo'), taunt=$('taunt');
+  function sayTaunt(){ taunt.style.opacity=0; setTimeout(function(){ taunt.textContent='「否」：'+taunts[Math.floor(Math.random()*taunts.length)]; taunt.style.opacity=1; },200); }
+  function growYes(){
+    state.fleeCount++; save();
+    var sc=1+state.fleeCount*0.18; if(sc>2.6) sc=2.6;
+    btnYes.style.transform='scale('+sc+')';
+    sayTaunt();
+    if(state.fleeCount>=7){
+      btnNo.style.opacity='0'; btnNo.style.transform='scale(.2)';
+      setTimeout(function(){ btnNo.style.display='none'; },400);
+      taunt.textContent='「否」：好啦好啦我放棄，妳就按「好哦」吧 ♥';
+    }
+  }
+  function fleeNo(){
+    if(btnNo.style.display==='none') return;
+    var pad=18, bw=btnNo.offsetWidth, bh=btnNo.offsetHeight;
+    btnNo.style.position='fixed';
+    btnNo.style.left=(pad+Math.random()*Math.max(1,window.innerWidth-bw-pad*2))+'px';
+    btnNo.style.top =(pad+Math.random()*Math.max(1,window.innerHeight-bh-pad*2))+'px';
+    btnNo.style.zIndex='50';
+    growYes();
+  }
+  document.addEventListener('pointermove', function(e){
+    if(state.step!==1 || btnNo.style.display==='none') return;
+    var r=btnNo.getBoundingClientRect();
+    if(Math.hypot(e.clientX-(r.left+r.width/2), e.clientY-(r.top+r.height/2)) < 110) fleeNo();
+  });
+  btnNo.addEventListener('click', fleeNo);
+  btnNo.addEventListener('touchstart', function(e){ e.preventDefault(); fleeNo(); }, {passive:false});
+  btnYes.addEventListener('click', function(){
+    for(var i=0;i<30;i++){
+      var c=document.createElement('div'); c.className='confetti-heart'; c.textContent='♥';
+      c.style.left=Math.random()*100+'vw'; c.style.top='-24px';
+      c.style.fontSize=(16+Math.random()*28)+'px';
+      c.style.color=['#ff7eb6','#ffb3d4','#c9a8ff','#ff5ea0'][Math.floor(Math.random()*4)];
+      c.style.animationDelay=(Math.random()*0.9)+'s';
+      document.body.appendChild(c);
+      (function(el){ setTimeout(function(){ el.remove(); },3600); })(c);
+    }
+    setTimeout(function(){ showStep(2); }, 550);
+  });
+  if(state.fleeCount>0){
+    var sc0=1+state.fleeCount*0.18; if(sc0>2.6) sc0=2.6;
+    btnYes.style.transform='scale('+sc0+')';
+    if(state.fleeCount>=7){ btnNo.style.display='none'; taunt.textContent='「否」：好啦好啦我放棄，妳就按「好哦」吧 ♥'; }
+  }
+
+  var dateInput=$('dateInput'), btnDate=$('btnDateConfirm');
+  var today=new Date();
+  dateInput.min=today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  if(state.date){ dateInput.value=state.date; btnDate.disabled=false; }
+  dateInput.addEventListener('change', function(){
+    if(dateInput.value){ state.date=dateInput.value; save(); btnDate.disabled=false; }
+  });
+  btnDate.addEventListener('click', function(){ if(state.date) showStep(3); });
+
+  function fmtDate(d){
+    if(!d) return '';
+    var p=d.split('-'); return p[0]+'年'+Number(p[1])+'月'+Number(p[2])+'日';
+  }
+  function updateSoFar(n){
+    var t='目前已選：';
+    if(state.date) t+='🌙 '+fmtDate(state.date);
+    if(n===3 && state.food) t+='　✨ '+state.food;
+    $('sofar'+n).textContent=t;
+  }
+
+  document.querySelectorAll('.food-card').forEach(function(card){
+    if(state.food && card.dataset.food===state.food) card.classList.add('selected');
+    card.addEventListener('click', function(){
+      document.querySelectorAll('.food-card').forEach(function(c){ c.classList.remove('selected'); });
+      card.classList.add('selected');
+      state.food=card.dataset.food; save();
+      setTimeout(function(){ showStep(4); }, 550);
+    });
+  });
+
+  function buildRecap(){
+    var old=document.querySelector('.recap'); if(old) old.remove();
+    var r=document.createElement('div'); r.className='recap';
+    r.textContent='♥ 我們的約會：'+fmtDate(state.date)+'　一起去吃「'+state.food+'」';
+    $('letter').insertBefore(r, $('letter').children[1]);
+  }
+  $('btnAgain').addEventListener('click', function(){
+    var l=$('letter');
+    l.style.animation='none'; void l.offsetWidth;
+    l.style.animation='rise .8s cubic-bezier(.2,.9,.3,1.2)';
+    buildRecap();
+    setTimeout(function(){ window.scrollTo({top:document.body.scrollHeight, behavior:'smooth'}); }, 350);
+  });
+  $('btnReset').addEventListener('click', function(){
+    if(confirm('確定要重置所有選擇嗎？')){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} location.reload(); }
+  });
+
+  showStep(state.step);
+})();
+</script>
+</body>
+</html>
